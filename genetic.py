@@ -3,7 +3,6 @@ import time
 import os
 import itertools
 import random
-import numpy as np
 
 # Lê os arquivos do diretório indicado, executa a heurística para cada um deles e imprime o resultado
 def lerArquivosDiretorio(diretorio, att = False):
@@ -25,15 +24,15 @@ def lerArquivosDiretorio(diretorio, att = False):
         
         totalTempo = 0
         totalSolucao = 0
-
-        for _ in range(1):
+        print("Rodando o arquivo", filename)
+        for _ in range(5):
             inicio = time.time()
             resultado = calcularHeuristica(coordenadas, att)
             tempoGasto = time.time() - inicio
             totalTempo += tempoGasto
             totalSolucao += resultado
-        print("Resultado encontrado para o arquivo", filename, ":", totalSolucao/1)
-        print("Tempo gasto para o arquivo", filename, ":", totalTempo*1000.0, "ms")
+        print("Resultado encontrado para o arquivo", filename, ":", totalSolucao/5)
+        print("Tempo gasto para o arquivo", filename, ":", totalTempo*200.0, "ms")
         print()
 
 # Calcula a distância de acordo com a formula correta do arquivo
@@ -86,7 +85,7 @@ def buscaLocal(solucao, custoSolucao, matrizDistancias):
 
 def gerarIndividuo(matrizDistancias):
     visitados = set()
-    noInicial = random.randint(0, len(matrizDistancias)-1) # Escolhe o nÃ³ de inicio aleatoriamente
+    noInicial = random.randint(0, len(matrizDistancias)-1) # Escolhe o nó de inicio aleatoriamente
     noAtual = noInicial
     custoSolucao = 0
     solucao = [noInicial]
@@ -211,7 +210,7 @@ def calcularHeuristica(coordenadas, att):
         filho = mutacao(filho, matrizDistancias)
         populacao = gerarNovaPopulacao(populacao, pai, mae, filho)
         it+=1
-        if it == 1e4:
+        if it == 1e3:
             break
     melhorSolucao = (math.inf, [])
     for indiviuo in populacao:
