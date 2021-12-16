@@ -77,12 +77,14 @@ def calcularCustoSolucao(solucao, matrizDistancias):
         custo += matrizDistancias[solucao[i]][solucao[i+1]]
     return custo
 
+# Executa a busca local na solução até encontrar o ótimo local
 def buscaLocal(solucao, custoSolucao, matrizDistancias):
     while True:
         solucao, custoSolucao, melhora = vizinhos2Opt(custoSolucao, solucao, matrizDistancias)
         if not melhora:
             return solucao, custoSolucao
 
+# Gera um indivíduo com a heurística NN, com um ponto de início aleatório, seguida de uma busca local
 def gerarIndividuo(matrizDistancias):
     visitados = set()
     noInicial = random.randint(0, len(matrizDistancias)-1) # Escolhe o nó de inicio aleatoriamente
@@ -104,14 +106,14 @@ def gerarIndividuo(matrizDistancias):
         noAtual = proximoNo
     custoSolucao += matrizDistancias[noAtual][noInicial]
     solucao.append(noInicial)
-
+    # Executa a busca local no indivíduo gerado
     return buscaLocal(solucao, custoSolucao, matrizDistancias)
     
-
+# Gera a população inicial da metaheurística
 def populacaoInicial(matrizDistancias, tamanhoPopulacao = 15):
     return [gerarIndividuo(matrizDistancias) for _ in range(tamanhoPopulacao)]
 
-# Seleciona com o método de torneio
+# Seleciona os pais do próximo indivíduo gerado por meio do método de torneio, com 2 candidatos
 def selecionaPais(populacao, k = 2):
     tempPop = populacao.copy()
     possiveisPais = random.sample(tempPop, k)
@@ -128,7 +130,7 @@ def selecionaPais(populacao, k = 2):
             mae = possivelMae
     return pai, mae
 
-# Estrategia OX
+# Estrategia Order Crossover para recombinação
 def recombinacao(pai, mae, matrizDistancias):
     pai = pai[0].copy()
     mae = mae[0].copy()
@@ -136,15 +138,14 @@ def recombinacao(pai, mae, matrizDistancias):
     ultimaCidade = pai[-1]
     # Deleta a última cidade da mãe
     del mae[len(mae)-1]
-    k = int(1/3 * len(pai)) 
+    k = int(1/4 * len(pai)) 
     filho = []
-    # As repetições são n / k arredondada para cima
+    # As repetições são n / k, arredondado para cima
     while pai:
         tamanho = min(len(pai),k)
         paiTemp = pai[:tamanho]
         filho.extend(paiTemp)
         pai = pai[tamanho:]
-        # O(kn) 
         mae = [city for city in mae if city not in paiTemp]
         # Inverte o pai e a mae
         pai, mae = mae, pai
@@ -152,6 +153,7 @@ def recombinacao(pai, mae, matrizDistancias):
     custoFilho = calcularCustoSolucao(filho, matrizDistancias)
     return buscaLocal(filho, custoFilho, matrizDistancias)
 
+# Realiza uma mutacao, fazendo uma operação do 2-Opt em duas arestas aleatórias do filho
 def mutacao(filho, matrizDistancias):
     solucao = filho[0]
     custoSolucao = filho[1]
@@ -175,6 +177,7 @@ def mutacao(filho, matrizDistancias):
     custoSolucao += mudanca
     return novaSolucao, custoSolucao
 
+# Gera a nova população, descartando a pior solução entre o filho e os dois pais
 def gerarNovaPopulacao(populacao, pai, mae, filho):
     populacao.remove(pai)
     if mae in populacao:
@@ -210,8 +213,9 @@ def calcularHeuristica(coordenadas, att):
         filho = mutacao(filho, matrizDistancias)
         populacao = gerarNovaPopulacao(populacao, pai, mae, filho)
         it+=1
-        if it == 1e3:
+        if it == 1e3: # Encerra após 1000 gerações
             break
+    # Escolhe o melhor indivíduo da população como solução
     melhorSolucao = (math.inf, [])
     for indiviuo in populacao:
         melhorSolucao = min(melhorSolucao, (indiviuo[1], indiviuo[0]))
